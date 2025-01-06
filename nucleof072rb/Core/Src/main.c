@@ -98,6 +98,7 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOB, GPIO_OUTPUT, GPIO_PIN_SET); //chip-select is active high
   HAL_TIM_Base_Init(&htim1);
+  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -116,7 +117,6 @@ int main(void)
 	  adc_val = ((rx_pointer[0]<<8) | (rx_pointer[1]));
 	  adc_val = adc_val>>6; //get rid of 6 LSB
 
-	  HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
 	  TIM1->CCR1 = adc_val; //set timer pwm
 
 	  HAL_GPIO_WritePin(GPIOB, GPIO_OUTPUT, GPIO_PIN_SET);
