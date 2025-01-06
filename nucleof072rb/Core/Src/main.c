@@ -19,6 +19,8 @@
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
+#include "spi.h"
+#include "tim.h"
 #include "usart.h"
 #include "gpio.h"
 
@@ -56,6 +58,10 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+uint8_t tx_pointer[1] = {0x80}; //channel 0 (4 bit input)
+uint8_t rx_pointer[2]; // 10 bit output
+uint16_t adc_val;
+
 /* USER CODE END 0 */
 
 /**
@@ -87,14 +93,34 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_USART2_UART_Init();
+  MX_SPI1_Init();
+  MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
-
+  HAL_GPIO_WritePin(GPIOB, GPIO_OUTPUT, GPIO_PIN_SET); //chip-select is active high
+  HAL_TIM_Base_Init(&htim1);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+	  /* SPI STUFFZ */
+	  //CHIP SELECT (GPIO_OUTPUT)
+	  HAL_GPIO_WritePin(GPIOB, GPIO_OUTPUT, GPIO_PIN_RESET);
+
+	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, SPI_DATASIZE_10BIT, 1200); //on clarification on timeout value
+
+	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
+	  //only first 10 bits
+	  //is a comparison required here?
+	  adc_val = ((rx_pointer[0]<<8) | (rx_pointer[1]));
+	  adc_val = adc_val>>6; //get rid of 6 LSB
+
+	  TIM1->CCR1 = adc_val; //set timer pwm
+
+	  HAL_GPIO_WritePin(GPIOB, GPIO_OUTPUT, GPIO_PIN_SET);
+	  HAL_Delay(10);
+
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
