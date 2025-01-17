@@ -119,7 +119,7 @@ int main(void)
 	  //is a comparison required here?
 	  adc_val = ((rx_pointer[1]<<8) | (rx_pointer[2]));
 	  adc_val = adc_val>>6; //get rid of 6 LSB
-	  TIM1->PSC = adc_val; //set timer pwm
+	  TIM1->CCR1 = adc_val; //set timer pwm
 
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 	  HAL_Delay(10);
