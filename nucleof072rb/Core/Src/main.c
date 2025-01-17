@@ -58,8 +58,8 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t tx_pointer[1] = {0x80}; //channel 0 (4 bit input)
-uint8_t rx_pointer[2]; // 10 bit output
+uint8_t tx_pointer[1] = {0x80};
+uint8_t rx_pointer[3] = {0}; // 10 bit output
 uint16_t adc_val;
 
 /* USER CODE END 0 */
@@ -97,6 +97,9 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET); //chip-select is active high
+
+  TIM1->PSC = 48077;
+  TIM1->ARR = 20;
   HAL_TIM_Base_Init(&htim1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   /* USER CODE END 2 */
@@ -105,19 +108,18 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-	  /* SPI STUFFZ */
+	  /* SPI */
 	  //CHIP SELECT (GPIO_OUTPUT)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_RESET);
 
-	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, SPI_DATASIZE_10BIT, 1200); //on clarification on timeout value
+	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, SPI_DATASIZE_10BIT, 100); //clarification on timeout value
 
 	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
 	  //only first 10 bits
 	  //is a comparison required here?
-	  adc_val = ((rx_pointer[0]<<8) | (rx_pointer[1]));
+	  adc_val = ((rx_pointer[1]<<8) | (rx_pointer[2]));
 	  adc_val = adc_val>>6; //get rid of 6 LSB
-
-	  TIM1->CCR1 = adc_val; //set timer pwm
+	  TIM1->PSC = adc_val; //set timer pwm
 
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 	  HAL_Delay(10);
