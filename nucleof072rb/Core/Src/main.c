@@ -98,8 +98,6 @@ int main(void)
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET); //chip-select is active high
 
-  TIM1->PSC = 48077;
-  TIM1->ARR = 20;
   HAL_TIM_Base_Init(&htim1);
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   /* USER CODE END 2 */
@@ -111,17 +109,14 @@ int main(void)
 	  /* SPI */
 	  //CHIP SELECT (GPIO_OUTPUT)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_RESET);
-
 	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, SPI_DATASIZE_10BIT, 100); //clarification on timeout value
+	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 
 	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
-	  //only first 10 bits
-	  //is a comparison required here?
-	  adc_val = ((rx_pointer[1]<<8) | (rx_pointer[2]));
-	  adc_val = adc_val>>6; //get rid of 6 LSB
-	  TIM1->CCR1 = adc_val; //set timer pwm
+	  adc_val = (((rx_pointer[1] && 0x07)<<8) | (rx_pointer[2])); //gets rid of the 5 msb of the 2nd transmission before shifting
+	  adc_val = ((adc_val-3200)/3200 * 1023)+3200  ; //convert 10-bit adc value to counts (within 3200 to 6400..)
+	  TIM__HAL_TIM_SET_COMPARE(&htim, TIM_CHANNEL_1, adc_val); //set timer pwm
 
-	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 	  HAL_Delay(10);
 
     /* USER CODE END WHILE */
