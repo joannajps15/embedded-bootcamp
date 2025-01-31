@@ -114,7 +114,7 @@ int main(void)
 
 	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
 	  adc_val = (((rx_pointer[1] & 0x07) << 8) | (rx_pointer[2])); //gets rid of the 5 msb of the 2nd transmission before shifting
-	  adc_val = ((adc_val-3200)/3200 * 1023)+3200  ; //convert 10-bit adc value to counts (within 3200 to 6400..)
+	  adc_val = (adc_val*3200)/1023 + 3200  ; //convert 10-bit adc value (0 to 1023) to counts (within 3200 to 6400)
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, adc_val); //set timer pwm
 
 	  HAL_Delay(10);
