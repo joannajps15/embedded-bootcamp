@@ -58,7 +58,7 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
-uint8_t tx_pointer[1] = {0x80};
+uint8_t tx_pointer[3] = {0x80, 0, 0};
 uint8_t rx_pointer[3] = {0}; // 10 bit output
 uint16_t adc_val;
 
@@ -109,13 +109,13 @@ int main(void)
 	  /* SPI */
 	  //CHIP SELECT (GPIO_OUTPUT)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_RESET);
-	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, SPI_DATASIZE_10BIT, 100); //clarification on timeout value
+	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, 1, 100); //clarification on timeout value
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 
 	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
 	  adc_val = (((rx_pointer[1] & 0x07) << 8) | (rx_pointer[2])); //gets rid of the 5 msb of the 2nd transmission before shifting
 	  adc_val = ((adc_val-3200)/3200 * 1023)+3200  ; //convert 10-bit adc value to counts (within 3200 to 6400..)
-	  TIM__HAL_TIM_SET_COMPARE(&htim, TIM_CHANNEL_1, adc_val); //set timer pwm
+	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, adc_val); //set timer pwm
 
 	  HAL_Delay(10);
 
