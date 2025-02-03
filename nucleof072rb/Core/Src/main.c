@@ -65,7 +65,7 @@ const int range_b = 3200;
 const int min_b = 3200;
 const int max_b = 6400;
 
-uint8_t tx_pointer[3] = {0x80, 0, 0};
+uint8_t tx_pointer[3] = {0x01, 0x80, 0};
 uint8_t rx_pointer[3] = {0}; // 10 bit output
 uint16_t adc_val;
 
