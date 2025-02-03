@@ -58,6 +58,13 @@ void SystemClock_Config(void);
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
 
+const int range_a = 1023;
+const int min_a = 0;
+const int max_a = 1023;
+const int range_b = 3200;
+const int min_b = 3200;
+const int max_b = 6400;
+
 uint8_t tx_pointer[3] = {0x80, 0, 0};
 uint8_t rx_pointer[3] = {0}; // 10 bit output
 uint16_t adc_val;
@@ -97,8 +104,9 @@ int main(void)
   MX_TIM1_Init();
   /* USER CODE BEGIN 2 */
   HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET); //chip-select is active high
+  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, 3200); //set timer pwm @ start
 
-  HAL_TIM_Base_Init(&htim1);
+
   HAL_TIM_PWM_Start(&htim1, TIM_CHANNEL_1);
   /* USER CODE END 2 */
 
@@ -109,12 +117,12 @@ int main(void)
 	  /* SPI */
 	  //CHIP SELECT (GPIO_OUTPUT)
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_RESET);
-	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, 1, 100); //clarification on timeout value
+	  HAL_SPI_TransmitReceive(&hspi1, tx_pointer, rx_pointer, 3, 100); //clarification on timeout value
 	  HAL_GPIO_WritePin(GPIOB, GPIO_Output_Pin, GPIO_PIN_SET);
 
 	  /* MCU TO SERVO MOTOR (PWM SIGNAL) */
 	  adc_val = (((rx_pointer[1] & 0x07) << 8) | (rx_pointer[2])); //gets rid of the 5 msb of the 2nd transmission before shifting
-	  adc_val = (adc_val*3200)/1023 + 3200  ; //convert 10-bit adc value (0 to 1023) to counts (within 3200 to 6400)
+	  adc_val = (adc_val*range_b)/range_a + min_a; //convert 10-bit adc value (0 to 1023) to counts (within 3200 to 6400)
 	  __HAL_TIM_SET_COMPARE(&htim1, TIM_CHANNEL_1, adc_val); //set timer pwm
 
 	  HAL_Delay(10);
